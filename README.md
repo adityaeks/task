@@ -1,58 +1,52 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛠️ Daftar Library & Dependensi - TaskManager
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Dokumentasi ini mencantumkan seluruh framework, library, dan dependensi yang digunakan di dalam proyek **TaskManager** (baik di sisi Backend, Frontend Build Tooling, maupun Client-Side CDN di halaman tertentu).
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🖥️ 1. Sisi Backend (PHP & Laravel - `composer.json`)
+Sisi backend dibangun menggunakan **Laravel 13** dan **PHP 8.3**. Berikut adalah dependensi composer yang digunakan:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Core Dependensi (Production)
+*   **PHP (`^8.3`)** - Runtime utama backend.
+*   **Laravel Framework (`^13.8`)** - Framework utama untuk routing, Eloquent ORM, Blade templating, dll.
+*   **Laravel Tinker (`^3.0`)** - Shell interaktif untuk berinteraksi langsung dengan database & objek Laravel melalui command line.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Dependensi Pengembangan (Development / `require-dev`)
+*   **PHPUnit (`^12.5.12`)** - Framework pengujian (testing) unit & feature.
+*   **FakerPHP/Faker (`^1.23`)** - Library untuk generate data dummy (palsu) saat seeding database atau testing.
+*   **Laravel Pint (`^1.27`)** - Alat pemformat kode PHP (PHP Code Style Fixer) agar konsisten sesuai standar PSR-12/Laravel.
+*   **Laravel Pail (`^1.2.5`)** - Utilitas pembaca log Laravel secara real-time langsung melalui terminal.
+*   **Laravel Pao (`^1.0.6`)** - Package tambahan pendukung Laravel.
+*   **Mockery (`^1.6`)** - PHP mock object framework untuk mempermudah unit testing.
+*   **Collision (`^8.6`)** - Tampilan visual error handler yang indah saat terjadi kesalahan di console/terminal.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🎨 2. Sisi Frontend & Build Tooling (NPM - `package.json`)
+Build tooling dan styling diatur menggunakan **Vite** dan **Tailwind CSS v4**:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+*   **Vite (`^8.0.0`)** - Frontend build tool berkecepatan tinggi sebagai pengganti Laravel Mix.
+*   **Tailwind CSS (`^4.0.0`)** - Framework CSS modern utility-first untuk desain UI responsif dan elegan.
+*   **@tailwindcss/vite (`^4.0.0`)** - Integrasi resmi compiler Tailwind CSS v4 dengan build engine Vite.
+*   **Laravel Vite Plugin (`^3.1`)** - Plugin penghubung aset Vite ke layout Blade Laravel.
+*   **Concurrently (`^9.0.1`)** - Utilitas untuk menjalankan beberapa proses command line sekaligus (seperti `php artisan serve`, queue listener, dan `npm run dev`) dalam satu tab terminal.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 🌐 3. Sisi Client-Side (CDN Libraries di Blade View)
+Untuk mendukung beberapa fitur tools instan tanpa overhead database/backend round-trip, beberapa halaman memuat library JavaScript langsung menggunakan CDN:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 📝 Code Prettifier (`resources/views/prettifier/index.blade.php`)
+*   **Prettier Standalone v3** (`prettier@3/standalone.js`) - Library formatter kode utama untuk memformat Javascript, Typescript, HTML, dan CSS di browser.
+    *   *Plugins*: Babel (Parser JS), HTML Parser, PostCSS (Parser CSS), dan TypeScript Parser.
+*   **sql-formatter v15** (`sql-formatter@15`) - Formatter khusus untuk merapikan query SQL secara instan.
+*   *Native/Custom Implementations*:
+    *   **JSON**: Menggunakan native `JSON.stringify()`.
+    *   **XML & PHP**: Menggunakan regex custom & indentasi manual bawaan javascript di halaman tersebut.
 
-```bash
-composer require laravel/boost --dev
+### 🔍 Diff Checker (`resources/views/diff-checker/index.blade.php`)
+*   **jsdiff v5.1.0** (`jsdiff/5.1.0/diff.min.js`) - Library perbandingan teks baris-per-baris (line diffing) bergaya GitHub untuk melihat perbedaan sebelum (*Before*) dan sesudah (*After*).
 
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 🖋️ Tipografi & Fonts (Global)
+*   **Google Fonts** (Outfit & Plus Jakarta Sans) - Dimuat via link CDN di header layout global (`app.blade.php`).
