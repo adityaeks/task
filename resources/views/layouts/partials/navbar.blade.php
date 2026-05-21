@@ -8,7 +8,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
         </button>
-        <div class="relative w-80 max-w-xs md:max-w-md hidden sm:block">
+        <!-- <div class="relative w-80 max-w-xs md:max-w-md hidden sm:block">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -16,7 +16,7 @@
             </span>
             <input type="text" onclick="toggleSpotlightSearch(true)" placeholder="Search anything... (Ctrl+K)" 
                    class="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800/60 border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer placeholder-slate-400 dark:placeholder-zinc-500">
-        </div>
+        </div> -->
     </div>
 
     <!-- Right Header: Widgets -->
