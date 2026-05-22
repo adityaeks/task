@@ -152,6 +152,92 @@
             display: flex !important;
         }
     }
+
+    /* Failsafe Task Badge Styles to bypass Tailwind JIT compilation in production */
+    .task-badge {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
+        padding: 2px 6px !important;
+        border-radius: 6px !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+    }
+    .task-badge:hover {
+        transform: scale(1.01) !important;
+    }
+
+    /* Completed Badge Style (Emerald Theme) */
+    .badge-completed {
+        background-color: #ecfdf5 !important;
+        color: #047857 !important;
+        border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    }
+    .badge-completed:hover {
+        background-color: #d1fae5 !important;
+    }
+    .dark .badge-completed {
+        background-color: rgba(6, 78, 59, 0.25) !important;
+        color: #34d399 !important;
+        border: 1px solid rgba(6, 78, 59, 0.4) !important;
+    }
+    .dark .badge-completed:hover {
+        background-color: rgba(6, 78, 59, 0.45) !important;
+    }
+
+    /* Pending Badge Style (Indigo Theme) */
+    .badge-pending {
+        background-color: rgba(238, 242, 255, 0.7) !important;
+        color: #4338ca !important;
+        border: 1px solid rgba(199, 210, 254, 0.3) !important;
+    }
+    .badge-pending:hover {
+        background-color: rgba(224, 231, 255, 0.7) !important;
+    }
+    .dark .badge-pending {
+        background-color: rgba(30, 27, 75, 0.25) !important;
+        color: #818cf8 !important;
+        border: 1px solid rgba(49, 46, 129, 0.35) !important;
+    }
+    .dark .badge-pending:hover {
+        background-color: rgba(30, 27, 75, 0.45) !important;
+    }
+
+    /* Sub-task Progress Counter */
+    .task-badge-progress {
+        font-size: 8px !important;
+        opacity: 0.75 !important;
+        font-weight: 600 !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Assigned User Initials Pill */
+    .task-badge-user {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 2px 4px !important;
+        border-radius: 4px !important;
+        font-size: 8px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        flex-shrink: 0 !important;
+        transform: scale(0.9) !important;
+        background-color: rgba(226, 232, 240, 0.6) !important;
+        color: #475569 !important;
+    }
+    .dark .task-badge-user {
+        background-color: rgba(39, 39, 42, 0.8) !important;
+        color: #a1a1aa !important;
+    }
 </style>
 
 <div class="space-y-4">
@@ -282,29 +368,26 @@
                     <div class="flex-1 flex flex-col justify-end space-y-1">
                         {{-- Desktop Layout: Full Text Badges --}}
                         <div class="calendar-desktop-only flex-col gap-1 overflow-y-auto calendar-tasks-container pr-0.5 compact-scrollbar">
-                            @foreach($dayTasks as $task)
+                             @foreach($dayTasks as $task)
                                 @php
                                     $allDone = ($task->details_count > 0 && $task->completed_count === $task->details_count);
-                                    
-                                    $badgeStyle = $allDone 
-                                        ? 'bg-emerald-50 hover:bg-emerald-100/80 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/30' 
-                                        : 'bg-indigo-50/70 hover:bg-indigo-100/70 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/30';
+                                    $badgeStyle = $allDone ? 'badge-completed' : 'badge-pending';
                                 @endphp
                                 <a href="{{ route('tasks.show', $task->id) }}" 
-                                   class="flex items-center justify-between gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold truncate transition duration-150 transform hover:scale-[1.01] shadow-sm {{ $badgeStyle }}"
+                                   class="task-badge {{ $badgeStyle }}"
                                    title="{{ $task->title }} ({{ $task->completed_count }}/{{ $task->details_count }} subtask)">
                                     <span class="truncate flex-1">{{ $task->title }}</span>
                                     
                                     {{-- Sub-task Progress Counter --}}
                                     @if($task->details_count > 0)
-                                        <span class="text-[8px] opacity-75 font-semibold shrink-0">
+                                        <span class="task-badge-progress">
                                             {{ $task->completed_count }}/{{ $task->details_count }}
                                         </span>
                                     @endif
 
                                     {{-- Assigned User indicator --}}
                                     @if($task->user)
-                                        <span class="px-1.5 py-0.5 bg-slate-200/60 dark:bg-zinc-800/80 rounded-md text-[8px] text-slate-600 dark:text-zinc-400 font-extrabold uppercase tracking-wide shrink-0 scale-90">
+                                        <span class="task-badge-user">
                                             {{ substr($task->user, 0, 2) }}
                                         </span>
                                     @endif
