@@ -450,6 +450,30 @@
             grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         }
     }
+
+    /* Failsafe Mini Calendar Styles to bypass production Tailwind compilation issues */
+    .mini-calendar-header-item {
+        font-size: 9px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: uppercase !important;
+        color: #94a3b8 !important; /* slate-400 */
+    }
+    .dark .mini-calendar-header-item {
+        color: #71717a !important; /* zinc-500 */
+    }
+    .mini-calendar-header-sunday {
+        color: #e11d48 !important; /* rose-600 */
+        font-weight: 900 !important;
+    }
+    .dark .mini-calendar-header-sunday {
+        color: #fb7185 !important; /* rose-450 */
+    }
+
+    .mini-calendar-date-cell {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+    }
 </style>
 
 <div class="space-y-4">
@@ -667,7 +691,7 @@
                             $miniDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
                         @endphp
                         @foreach($miniDays as $idx => $mDay)
-                            <span class="text-[9px] font-extrabold tracking-wider {{ $idx === 0 ? 'text-rose-600 dark:text-rose-450 font-black' : 'text-slate-400 dark:text-zinc-500' }}">
+                            <span class="mini-calendar-header-item {{ $idx === 0 ? 'mini-calendar-header-sunday' : '' }}">
                                 {{ $mDay }}
                             </span>
                         @endforeach
@@ -686,7 +710,7 @@
                                     $taskCount = $dayTasks->count();
                                 @endphp
                                 <a href="{{ route('tasks.calendar', ['month' => $mNum, 'year' => $selectedYear]) }}"
-                                   class="relative group py-0.5 text-[10px] font-bold rounded-full flex flex-col items-center justify-center h-5 w-5 mx-auto transition-all duration-100
+                                   class="relative group py-0.5 mini-calendar-date-cell rounded-full flex flex-col items-center justify-center h-5 w-5 mx-auto transition-all duration-100
                                        @if($cell['isToday'])
                                            border-2 border-slate-900 dark:border-white font-black text-slate-900 dark:text-white scale-110 shadow-sm
                                        @elseif($cell['isHoliday'])
