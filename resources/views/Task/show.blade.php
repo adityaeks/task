@@ -3,6 +3,69 @@
 @section('title', $task->title . ' | TaskManager')
 
 @section('content')
+<style>
+    /* Failsafe iOS-Style Toggle Switch CSS to bypass Tailwind compilation on server */
+    .status-toggle-label {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        cursor: pointer !important;
+        user-select: none !important;
+    }
+
+    .status-toggle-input {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border-width: 0 !important;
+    }
+
+    .status-toggle-slider {
+        position: relative !important;
+        width: 32px !important;
+        height: 18px !important;
+        background-color: #cbd5e1 !important; /* light slate-300 */
+        border-radius: 9999px !important;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .dark .status-toggle-slider {
+        background-color: #27272a !important; /* dark zinc-800 */
+    }
+
+    /* Toggle Knob using ::after pseudoclass */
+    .status-toggle-slider::after {
+        content: "" !important;
+        position: absolute !important;
+        top: 2px !important;
+        left: 2px !important;
+        background-color: #ffffff !important;
+        border-radius: 50% !important;
+        height: 14px !important;
+        width: 14px !important;
+        transition: transform 0.2s ease !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+    }
+
+    /* Active state when checkbox is checked */
+    .status-toggle-input:checked + .status-toggle-slider {
+        background-color: #10b981 !important; /* emerald-500 */
+    }
+
+    .status-toggle-input:checked + .status-toggle-slider::after {
+        transform: translateX(14px) !important;
+    }
+
+    /* Focus Ring support */
+    .status-toggle-input:focus-visible + .status-toggle-slider {
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4) !important; /* indigo ring */
+    }
+</style>
+
 <div class="space-y-6 max-w-4xl mx-auto">
 
     {{-- Breadcrumb --}}
@@ -196,15 +259,13 @@
                             <span class="line-clamp-2">{{ $detail->desc ?: '—' }}</span>
                         </td>
                         <td class="px-6 py-3.5">
-                            <label class="relative inline-flex items-center cursor-pointer">
+                            <label class="status-toggle-label">
                                 <input type="checkbox" 
                                        id="toggle-{{ $detail->id }}"
-                                       class="sr-only peer subtask-toggle" 
+                                       class="status-toggle-input subtask-toggle" 
                                        onchange="toggleSubtaskStatus({{ $detail->id }}, this)" 
                                        @checked($done)>
-                                <div class="w-8 h-4.5 bg-slate-200 dark:bg-zinc-850 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/30 transition-all duration-200
-                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all after:duration-200
-                                            peer-checked:after:translate-x-[14px] peer-checked:bg-emerald-500"></div>
+                                <div class="status-toggle-slider"></div>
                             </label>
                         </td>
                     </tr>
