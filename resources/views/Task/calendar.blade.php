@@ -121,6 +121,13 @@
     .compact-scrollbar::-webkit-scrollbar-track {
         background-color: transparent;
     }
+
+    /* Failsafe Grid 7 columns fallback in case Tailwind compiled assets aren't updated on server */
+    .calendar-grid-7 {
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 1px !important;
+    }
 </style>
 
 <div class="space-y-4">
@@ -163,7 +170,7 @@
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm overflow-hidden">
         
         {{-- Weekday Headers --}}
-        <div class="grid grid-cols-7 border-b border-slate-100 dark:border-zinc-800/60 bg-slate-50/60 dark:bg-zinc-900/50">
+        <div class="grid grid-cols-7 calendar-grid-7 border-b border-slate-100 dark:border-zinc-800/60 bg-slate-50/60 dark:bg-zinc-900/50">
             @php
                 $weekDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             @endphp
@@ -175,7 +182,7 @@
         </div>
 
         {{-- Monthly Grid Cells --}}
-        <div class="grid grid-cols-7 bg-slate-100 dark:bg-zinc-850 gap-[1px]">
+        <div class="grid grid-cols-7 calendar-grid-7 bg-slate-100 dark:bg-zinc-850">
             @foreach($cells as $cell)
                 @php
                     $cellDate = $cell['date'];
