@@ -428,6 +428,28 @@
     .dark .holiday-divider {
         color: #52525b !important; /* zinc-600 */
     }
+
+    /* Failsafe Yearly Month Grid Layout to bypass Tailwind compilation on production */
+    .yearly-months-grid {
+        display: grid !important;
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+        gap: 24px !important;
+    }
+    @media (min-width: 640px) {
+        .yearly-months-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (min-width: 1024px) {
+        .yearly-months-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (min-width: 1200px) {
+        .yearly-months-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+    }
 </style>
 
 <div class="space-y-4">
@@ -627,7 +649,7 @@
 
     {{-- Calendar Yearly View (Full Year Layout) --}}
     <div id="calendar-yearly-view" class="hidden transition-all duration-300">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div class="yearly-months-grid">
             @foreach($yearlyMonths as $mNum => $yMonth)
                 <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm p-4 flex flex-col justify-between">
                     {{-- Month Name Header (links to that month's detail) --}}
