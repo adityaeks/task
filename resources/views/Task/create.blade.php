@@ -5,11 +5,25 @@
 @section('content')
 <style>
     /* Prevent squishing and enable single row horizontal layout in Board view */
+    #detail-board {
+        display: grid !important;
+        grid-template-columns: repeat(4, 300px) !important;
+        gap: 1rem;
+        overflow-x: auto;
+        width: 100%;
+        padding-bottom: 0.75rem;
+    }
+    #detail-board.hidden {
+        display: none !important;
+    }
     #detail-board .detail-row {
         width: 300px !important;
         flex-shrink: 0 !important;
     }
     @media (min-width: 640px) {
+        #detail-board {
+            grid-template-columns: repeat(4, 380px) !important;
+        }
         #detail-board .detail-row {
             width: 380px !important;
         }
@@ -139,6 +153,7 @@
                                 class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800 border-0 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none @error('user') ring-2 ring-rose-500 @enderror">
                             <option value="">— Pilih User —</option>
                             <option value="Adit" @selected(old('user') === 'Adit')>Adit</option>
+                            <option value="Ryan" @selected(old('user') === 'Ryan')>Ryan</option>
                             <option value="User 1" @selected(old('user') === 'User 1')>User 1</option>
                             <!-- <option value="Idhamsyah" @selected(old('user') === 'Idhamsyah')>Idhamsyah</option> -->
                         </select>
@@ -200,7 +215,7 @@
                         </button>
                     </div>
 
-                    <button type="button" onclick="addDetailRow({}, true)"
+                    <button type="button" onclick="addDetailGroup()"
                             class="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold text-xs px-3 py-1.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-950/60 transition">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -219,8 +234,8 @@
                 {{-- List/Row Container --}}
                 <div id="detail-rows" class="space-y-3 hidden"></div>
 
-                {{-- Board Layout Container --}}
-                <div id="detail-board" class="flex flex-nowrap overflow-x-auto w-full gap-4 pb-3 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-zinc-800"></div>
+                {{-- Board Layout Container: 4 kolom per baris --}}
+                <div id="detail-board"></div>
 
                 <p id="empty-detail-note" class="text-center text-xs text-slate-400 dark:text-zinc-500 py-6 hidden">
                     Klik "Tambah Baris" untuk menambah File.
@@ -391,8 +406,16 @@
         if (gta) syncGutter(gta, gta.dataset.gid);
 
         if (isManual) {
-            showToast('Baris file baru berhasil ditambahkan!');
+            // toast shown by addDetailGroup, not here
         }
+    }
+
+    function addDetailGroup() {
+        addDetailRow({ category: 'Controllers', name: '' });
+        addDetailRow({ category: 'Model', name: '' });
+        addDetailRow({ category: 'View', name: '' });
+        addDetailRow({ category: 'JS', name: '' });
+        showToast('4 baris berhasil ditambahkan!');
     }
 
     function toggleDetailStatus(btn, inputId, labelId) {
