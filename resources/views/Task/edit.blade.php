@@ -190,14 +190,14 @@
                     {{-- Segmented View Switcher --}}
                     <div class="flex items-center gap-1 bg-slate-100 dark:bg-zinc-800/60 p-1 rounded-xl">
                         <button type="button" onclick="setViewMode('row')" id="btn-view-row"
-                                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-indigo-600 dark:text-indigo-400 bg-white dark:bg-zinc-900 shadow-sm">
+                                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                             List
                         </button>
                         <button type="button" onclick="setViewMode('board')" id="btn-view-board"
-                                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300">
+                                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-indigo-600 dark:text-indigo-400 bg-white dark:bg-zinc-900 shadow-sm">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                             </svg>
@@ -215,17 +215,17 @@
                 </div>
             </div>
             <div class="p-6">
-                <div class="hidden md:grid grid-cols-12 gap-3 mb-2 px-1 text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                <div class="hidden grid-cols-12 gap-3 mb-2 px-1 text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                     <div class="col-span-8">Nama File</div>
                     <div class="col-span-3">Status</div>
                     <div class="col-span-1"></div>
                 </div>
                 
                 {{-- List/Row Container --}}
-                <div id="detail-rows" class="space-y-3"></div>
+                <div id="detail-rows" class="space-y-3 hidden"></div>
 
                 {{-- Board Layout Container --}}
-                <div id="detail-board" class="hidden flex flex-nowrap overflow-x-auto w-full gap-4 pb-3 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-zinc-800"></div>
+                <div id="detail-board" class="flex flex-nowrap overflow-x-auto w-full gap-4 pb-3 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-zinc-800"></div>
 
                 <p id="empty-detail-note" class="text-center text-xs text-slate-400 dark:text-zinc-500 py-6 hidden">
                     Klik "Tambah Baris" untuk menambah File.
@@ -251,7 +251,7 @@
 @push('scripts')
 <script>
     let detailIndex = 0;
-    let currentViewMode = 'row';
+    let currentViewMode = 'board';
     const existingDetails = @json($task->details);
     const oldDetails = @json(old('details'));
 
