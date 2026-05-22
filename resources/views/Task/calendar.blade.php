@@ -358,6 +358,76 @@
         background-color: rgba(39, 39, 42, 0.8) !important;
         color: #a1a1aa !important;
     }
+
+    /* Switcher Button custom styles to bypass production JIT compilation issues */
+    .btn-switcher-active {
+        background-color: #ffffff !important;
+        color: #4f46e5 !important; /* indigo-600 */
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    .dark .btn-switcher-active {
+        background-color: #3f3f46 !important; /* zinc-700 */
+        color: #ffffff !important;
+    }
+    
+    .btn-switcher-inactive {
+        background-color: transparent !important;
+        color: #475569 !important; /* slate-600 */
+    }
+    .dark .btn-switcher-inactive {
+        color: #a1a1aa !important; /* zinc-400 */
+    }
+    .btn-switcher-inactive:hover {
+        background-color: rgba(226, 232, 240, 0.5) !important; /* slate-200/50 */
+    }
+    .dark .btn-switcher-inactive:hover {
+        background-color: rgba(63, 63, 70, 0.5) !important; /* zinc-700/50 */
+    }
+
+    /* Custom styles for Holiday List Items to ensure compatibility without Tailwind JIT */
+    .holiday-list-item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-size: 11px !important;
+        line-height: 1.625 !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }
+    
+    .holiday-dot {
+        display: inline-block !important;
+        width: 4px !important;
+        height: 4px !important;
+        border-radius: 9999px !important;
+        background-color: #f43f5e !important; /* rose-500 */
+        flex-shrink: 0 !important;
+    }
+    
+    .holiday-date {
+        font-weight: 600 !important;
+        color: #334155 !important; /* slate-700 */
+    }
+    .dark .holiday-date {
+        color: #d4d4d8 !important; /* zinc-300 */
+    }
+    
+    .holiday-name {
+        font-weight: 500 !important;
+        color: #e11d48 !important; /* rose-600 */
+    }
+    .dark .holiday-name {
+        color: #fb7185 !important; /* rose-400 */
+    }
+    
+    .holiday-divider {
+        margin-left: 6px !important;
+        margin-right: 6px !important;
+        color: #94a3b8 !important; /* slate-400 */
+    }
+    .dark .holiday-divider {
+        color: #52525b !important; /* zinc-600 */
+    }
 </style>
 
 <div class="space-y-4">
@@ -374,12 +444,12 @@
             {{-- View Switcher Toggle Group --}}
             <div class="flex items-center bg-slate-100 dark:bg-zinc-800/60 p-1 rounded-xl">
                 <button onclick="switchView('monthly')" id="btn-view-monthly" 
-                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 bg-white text-indigo-600 dark:bg-zinc-700 dark:text-white shadow-sm"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 btn-switcher-active"
                         title="Tampilan Bulanan Detail">
                     Bulanan
                 </button>
                 <button onclick="switchView('yearly')" id="btn-view-yearly" 
-                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 text-slate-600 hover:bg-slate-200/50 dark:text-zinc-400 dark:hover:bg-zinc-700/50"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 btn-switcher-inactive"
                         title="Tampilan Setahun Penuh">
                     Full
                 </button>
@@ -633,14 +703,14 @@
         @if(count($monthlyHolidays) > 0)
             <ul class="space-y-2 mt-1 pl-1">
                 @foreach($monthlyHolidays as $holi)
-                    <li class="flex items-center gap-2.5 text-[11px] leading-relaxed">
-                        <span class="inline-block w-1 h-1 rounded-full bg-rose-500 flex-shrink-0"></span>
-                        <div class="text-slate-500 dark:text-zinc-450">
-                            <span class="font-semibold text-slate-700 dark:text-zinc-300">
+                    <li class="holiday-list-item">
+                        <span class="holiday-dot"></span>
+                        <div>
+                            <span class="holiday-date">
                                 {{ $holi['date']->translatedFormat('d F Y') }} ({{ $holi['date']->translatedFormat('l') }})
                             </span>
-                            <span class="mx-1.5 text-slate-400 dark:text-zinc-600">-</span>
-                            <span class="font-medium text-rose-550 dark:text-rose-400/90">{{ $holi['name'] }}</span>
+                            <span class="holiday-divider">-</span>
+                            <span class="holiday-name">{{ $holi['name'] }}</span>
                         </div>
                     </li>
                 @endforeach
@@ -663,14 +733,14 @@
         
         <ul class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 mt-1 pl-1">
             @foreach($yearlyHolidaysList as $holi)
-                <li class="flex items-center gap-2.5 text-[11px] leading-relaxed">
-                    <span class="inline-block w-1 h-1 rounded-full bg-rose-500 flex-shrink-0"></span>
-                    <div class="text-slate-500 dark:text-zinc-450">
-                        <span class="font-semibold text-slate-700 dark:text-zinc-300">
+                <li class="holiday-list-item">
+                    <span class="holiday-dot"></span>
+                    <div>
+                        <span class="holiday-date">
                             {{ $holi['date']->translatedFormat('d F Y') }} ({{ $holi['date']->translatedFormat('l') }})
                         </span>
-                        <span class="mx-1.5 text-slate-400 dark:text-zinc-600">-</span>
-                        <span class="font-medium text-rose-550 dark:text-rose-400/90">{{ $holi['name'] }}</span>
+                        <span class="holiday-divider">-</span>
+                        <span class="holiday-name">{{ $holi['name'] }}</span>
                     </div>
                 </li>
             @endforeach
@@ -694,8 +764,8 @@
         const btnMonthly = document.getElementById('btn-view-monthly');
         const btnYearly = document.getElementById('btn-view-yearly');
 
-        const activeClasses = ['bg-white', 'text-indigo-600', 'dark:bg-zinc-700', 'dark:text-white', 'shadow-sm'];
-        const inactiveClasses = ['text-slate-600', 'hover:bg-slate-200/50', 'dark:text-zinc-400', 'dark:hover:bg-zinc-700/50'];
+        const activeClasses = ['btn-switcher-active'];
+        const inactiveClasses = ['btn-switcher-inactive'];
 
         if (view === 'yearly') {
             // Hide Monthly and Show Yearly grid
