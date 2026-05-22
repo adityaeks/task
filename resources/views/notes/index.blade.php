@@ -152,7 +152,10 @@
                     Batal
                 </button>
                 <button type="button" id="confirm-delete-note-btn"
-                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-rose-600/10">
+                        class="flex-1 px-4 py-2.5 text-white font-bold text-xs rounded-xl transition"
+                        style="background:linear-gradient(to right,#f43f5e,#dc2626);box-shadow:0 4px 12px rgba(220,38,38,0.25);"
+                        onmouseover="this.style.background='linear-gradient(to right,#e11d48,#b91c1c)'"
+                        onmouseout="this.style.background='linear-gradient(to right,#f43f5e,#dc2626)'">
                     Hapus
                 </button>
             </div>
