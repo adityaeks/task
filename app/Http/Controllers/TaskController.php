@@ -40,13 +40,50 @@ class TaskController extends Controller
     }
 
     /**
+     * Display the calendar of tasks.
+     */
+    public function calendar(Request $request)
+    {
+        $month = (int) $request->input('month', date('n'));
+        $year  = (int) $request->input('year', date('Y'));
+
+        if ($month < 1 || $month > 12) {
+            $month = (int) date('n');
+        }
+        if ($year < 2000 || $year > 2100) {
+            $year = (int) date('Y');
+        }
+
+        $users = TaskHeader::select('user')->whereNotNull('user')->distinct()->orderBy('user')->pluck('user');
+
+        $startOfMonth = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $endOfMonth   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+
+        $tasksQuery = TaskHeader::with(['details'])
+            ->withCount([
+                'details',
+                'details as completed_count' => fn($q) => $q->where('status', 'Completed'),
+            ])
+            ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
+
+        if ($request->filled('user')) {
+            $tasksQuery->where('user', $request->user);
+        }
+
+        $tasks = $tasksQuery->get()->groupBy(fn($task) => $task->date ? $task->date->format('Y-m-d') : '');
+
+        return view('Task.calendar', compact('tasks', 'users', 'month', 'year'));
+    }
+
+    /**
      * Show the form for creating a new task header.
      */
-    public function create()
+    public function create(Request $request)
     {
+        $defaultDate = $request->input('date');
         // Distinct users already saved, for autocomplete/options
         $users = TaskHeader::select('user')->whereNotNull('user')->distinct()->orderBy('user')->pluck('user');
-        return view('Task.create', compact('users'));
+        return view('Task.create', compact('users', 'defaultDate'));
     }
 
     /**
@@ -59,7 +96,7 @@ class TaskController extends Controller
             'date'             => 'required|date',
             'path'             => 'nullable|string|max:500',
             'note'             => 'nullable|string',
-            'user'             => 'nullable|string|max:255',
+            'user'             => 'required|string|max:255',
             'details'          => 'nullable|array',
             'details.*.name'   => 'nullable|string|max:255',
             'details.*.desc'   => 'nullable|string',
@@ -124,7 +161,7 @@ class TaskController extends Controller
             'date'             => 'required|date',
             'path'             => 'nullable|string|max:500',
             'note'             => 'nullable|string',
-            'user'             => 'nullable|string|max:255',
+            'user'             => 'required|string|max:255',
             'details'          => 'nullable|array',
             'details.*.id'     => 'nullable|integer|exists:task_details,id',
             'details.*.name'   => 'nullable|string|max:255',

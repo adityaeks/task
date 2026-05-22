@@ -60,7 +60,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        {{ $detailsCount }} Sub-Tugas
+                        {{ $detailsCount }} Task
                     </span>
                     {{-- Path/Link --}}
                     @if($task->path)
@@ -84,13 +84,14 @@
                 <div class="relative h-20 w-20">
                     <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
                         <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="white" stroke-width="3"
+                        <circle id="progress-circle" cx="18" cy="18" r="15.9" fill="none" stroke="white" stroke-width="3"
                                 stroke-dasharray="{{ $progressPct }} {{ 100 - $progressPct }}"
-                                stroke-linecap="round"/>
+                                stroke-linecap="round"
+                                class="transition-all duration-500 ease-out"/>
                     </svg>
-                    <span class="absolute inset-0 flex items-center justify-center text-lg font-outfit font-extrabold text-white">{{ $progressPct }}%</span>
+                    <span id="progress-text" class="absolute inset-0 flex items-center justify-center text-lg font-outfit font-extrabold text-white">{{ $progressPct }}%</span>
                 </div>
-                <p class="text-[11px] font-bold text-white/60 text-center">{{ $completedCount }}/{{ $detailsCount }} selesai</p>
+                <p id="progress-subtext" class="text-[11px] font-bold text-white/60 text-center">{{ $completedCount }}/{{ $detailsCount }} selesai</p>
             </div>
         </div>
     </div>
@@ -130,14 +131,14 @@
     <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-zinc-800/40 bg-slate-50/60 dark:bg-zinc-900/30 flex items-center justify-between">
             <div>
-                <h2 class="font-outfit font-extrabold text-base">Sub-Tugas Detail</h2>
+                <h2 class="font-outfit font-extrabold text-base">Detail Task</h2>
                 <p class="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">Daftar pekerjaan rinci yang termasuk dalam task ini.</p>
             </div>
             @if($detailsCount > 0)
             <div class="flex items-center gap-2 text-xs font-bold">
-                <span class="text-emerald-600 dark:text-emerald-400">{{ $completedCount }}</span>
+                <span id="table-completed-count" class="text-emerald-600 dark:text-emerald-400">{{ $completedCount }}</span>
                 <span class="text-slate-400">/</span>
-                <span class="text-slate-600 dark:text-zinc-300">{{ $detailsCount }}</span>
+                <span id="table-details-count" class="text-slate-600 dark:text-zinc-300">{{ $detailsCount }}</span>
                 <span class="text-slate-400">selesai</span>
             </div>
             @endif
@@ -173,8 +174,10 @@
                     @php $done = $detail->status === 'Completed'; @endphp
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-zinc-800/10 transition-colors">
                         <td class="px-6 py-3.5">
-                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold
-                                {{ $done ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500' }}">
+                            <span id="circle-{{ $detail->id }}" 
+                                  data-index="{{ $i + 1 }}"
+                                  class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold transition-all duration-200
+                                      {{ $done ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500' }}">
                                 @if($done)
                                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
@@ -185,7 +188,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-3.5">
-                            <span class="font-semibold {{ $done ? 'line-through text-slate-400 dark:text-zinc-500' : 'text-slate-800 dark:text-zinc-200' }}">
+                            <span id="name-{{ $detail->id }}" class="font-semibold transition-all duration-200 {{ $done ? 'line-through text-slate-400 dark:text-zinc-500' : 'text-slate-800 dark:text-zinc-200' }}">
                                 {{ $detail->name }}
                             </span>
                         </td>
@@ -193,12 +196,16 @@
                             <span class="line-clamp-2">{{ $detail->desc ?: '—' }}</span>
                         </td>
                         <td class="px-6 py-3.5">
-                            <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border
-                                {{ $done
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40'
-                                    : 'bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 border-slate-200 dark:border-zinc-700/40' }}">
-                                {{ $detail->status }}
-                            </span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       id="toggle-{{ $detail->id }}"
+                                       class="sr-only peer subtask-toggle" 
+                                       onchange="toggleSubtaskStatus({{ $detail->id }}, this)" 
+                                       @checked($done)>
+                                <div class="w-8 h-4.5 bg-slate-200 dark:bg-zinc-850 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/30 transition-all duration-200
+                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all after:duration-200
+                                            peer-checked:after:translate-x-[14px] peer-checked:bg-emerald-500"></div>
+                            </label>
                         </td>
                     </tr>
                     @endforeach
@@ -288,6 +295,97 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    function toggleSubtaskStatus(id, checkbox) {
+        const isChecked = checkbox.checked;
+        const url = `/tasks/details/${id}/toggle`;
+
+        // Temporarily disable check during transit to avoid double clicks
+        checkbox.disabled = true;
+
+        fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            checkbox.disabled = false;
+            if (data.success) {
+                const done = data.status === 'Completed';
+
+                // 1. Update left-side checkmark/number
+                const circle = document.getElementById(`circle-${id}`);
+                if (circle) {
+                    if (done) {
+                        circle.className = "inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold transition-all duration-200 bg-emerald-500 text-white";
+                        circle.innerHTML = `
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        `;
+                    } else {
+                        circle.className = "inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold transition-all duration-200 bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500";
+                        circle.innerHTML = circle.getAttribute('data-index') || '1';
+                    }
+                }
+
+                // 2. Update task detail name (line-through / normal)
+                const name = document.getElementById(`name-${id}`);
+                if (name) {
+                    if (done) {
+                        name.className = "font-semibold transition-all duration-200 line-through text-slate-400 dark:text-zinc-500";
+                    } else {
+                        name.className = "font-semibold transition-all duration-200 text-slate-800 dark:text-zinc-200";
+                    }
+                }
+
+
+                // 4. Update parent task progress percentage and text
+                const pct = data.progressPct;
+                const progressCircle = document.getElementById('progress-circle');
+                const progressText = document.getElementById('progress-text');
+                const progressSubtext = document.getElementById('progress-subtext');
+
+                if (progressCircle) {
+                    progressCircle.setAttribute('stroke-dasharray', `${pct} ${100 - pct}`);
+                }
+                if (progressText) {
+                    progressText.innerText = `${pct}%`;
+                }
+                if (progressSubtext) {
+                    progressSubtext.innerText = `${data.completedCount}/${data.detailsCount} selesai`;
+                }
+
+                // 5. Update sub-task details table header count
+                const tableCompleted = document.getElementById('table-completed-count');
+                const tableDetailsCount = document.getElementById('table-details-count');
+                if (tableCompleted) {
+                    tableCompleted.innerText = data.completedCount;
+                }
+                if (tableDetailsCount) {
+                    tableDetailsCount.innerText = data.detailsCount;
+                }
+            } else {
+                checkbox.checked = !isChecked;
+                alert('Gagal memperbarui status sub-task.');
+            }
+        })
+        .catch(err => {
+            checkbox.disabled = false;
+            checkbox.checked = !isChecked;
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+        });
     }
 </script>
 @endpush
