@@ -640,7 +640,7 @@
                     </div>
                     
                     {{-- Mini-calendar weekday headers --}}
-                    <div class="grid grid-cols-7 gap-y-1 text-center mb-1.5">
+                    <div class="calendar-grid-7 gap-y-1 text-center mb-1.5">
                         @php
                             $miniDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
                         @endphp
@@ -652,7 +652,7 @@
                     </div>
                     
                     {{-- Mini-calendar cells grid --}}
-                    <div class="grid grid-cols-7 gap-y-1 text-center">
+                    <div class="calendar-grid-7 gap-y-1 text-center">
                         @foreach($yMonth['cells'] as $cell)
                             @if(is_null($cell))
                                 <span class="text-[10px] py-0.5 text-transparent select-none"></span>
