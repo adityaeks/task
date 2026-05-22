@@ -71,6 +71,7 @@
 <style>
     /* Custom CSS to handle robust, subtle hover fallbacks and styling */
     .calendar-cell {
+        min-height: 95px !important;
         transition: background-color 0.1s ease, border-color 0.1s ease;
     }
     
@@ -127,6 +128,29 @@
         display: grid !important;
         grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
         gap: 1px !important;
+    }
+
+    /* Tasks container max-height fallback */
+    .calendar-tasks-container {
+        max-height: 56px !important;
+    }
+
+    /* Robust responsive fallbacks independent of Tailwind compilation on server */
+    @media (min-width: 768px) {
+        .calendar-desktop-only {
+            display: flex !important;
+        }
+        .calendar-mobile-only {
+            display: none !important;
+        }
+    }
+    @media (max-width: 767px) {
+        .calendar-desktop-only {
+            display: none !important;
+        }
+        .calendar-mobile-only {
+            display: flex !important;
+        }
     }
 </style>
 
@@ -257,7 +281,7 @@
                     {{-- Cell Content: Tasks Container --}}
                     <div class="flex-1 flex flex-col justify-end space-y-1">
                         {{-- Desktop Layout: Full Text Badges --}}
-                        <div class="hidden md:flex flex-col gap-1 overflow-y-auto max-h-[56px] pr-0.5 compact-scrollbar">
+                        <div class="calendar-desktop-only flex-col gap-1 overflow-y-auto calendar-tasks-container pr-0.5 compact-scrollbar">
                             @foreach($dayTasks as $task)
                                 @php
                                     $allDone = ($task->details_count > 0 && $task->completed_count === $task->details_count);
@@ -290,7 +314,7 @@
 
                         {{-- Mobile Layout: Dot Indicators for task count --}}
                         @if($taskCount > 0)
-                            <div class="flex md:hidden flex-wrap gap-0.5 justify-center mt-0.5">
+                            <div class="calendar-mobile-only flex-wrap gap-0.5 justify-center mt-0.5">
                                 @foreach($dayTasks as $task)
                                     @php
                                         $allDone = ($task->details_count > 0 && $task->completed_count === $task->details_count);
