@@ -61,7 +61,7 @@ class TaskController extends Controller
             'note'             => 'nullable|string',
             'user'             => 'nullable|string|max:255',
             'details'          => 'nullable|array',
-            'details.*.name'   => 'required_with:details|string|max:255',
+            'details.*.name'   => 'nullable|string|max:255',
             'details.*.desc'   => 'nullable|string',
             'details.*.status' => 'required_with:details|in:Pending,Completed',
         ]);
@@ -78,8 +78,12 @@ class TaskController extends Controller
             if ($request->filled('details')) {
                 $details = array_filter($request->details, fn($d) => !empty($d['name']));
                 foreach ($details as $detail) {
+                    $name = $detail['name'];
+                    if (!empty($detail['category'])) {
+                        $name = strtolower($detail['category']) . '.' . $name;
+                    }
                     $header->details()->create([
-                        'name'   => $detail['name'],
+                        'name'   => $name,
                         'desc'   => $detail['desc'] ?? null,
                         'status' => $detail['status'],
                     ]);
@@ -123,7 +127,7 @@ class TaskController extends Controller
             'user'             => 'nullable|string|max:255',
             'details'          => 'nullable|array',
             'details.*.id'     => 'nullable|integer|exists:task_details,id',
-            'details.*.name'   => 'required_with:details|string|max:255',
+            'details.*.name'   => 'nullable|string|max:255',
             'details.*.desc'   => 'nullable|string',
             'details.*.status' => 'required_with:details|in:Pending,Completed',
         ]);
@@ -142,18 +146,25 @@ class TaskController extends Controller
             $details = array_filter($request->input('details', []), fn($d) => !empty($d['name']));
 
             foreach ($details as $detail) {
+                $name = $detail['name'];
+                if (!empty($detail['category'])) {
+                    $prefix = strtolower($detail['category']) . '.';
+                    if (strpos($name, $prefix) !== 0) {
+                        $name = $prefix . $name;
+                    }
+                }
                 if (!empty($detail['id'])) {
                     TaskDetail::where('id', $detail['id'])
                         ->where('task_header_id', $task->id)
                         ->update([
-                            'name'   => $detail['name'],
+                            'name'   => $name,
                             'desc'   => $detail['desc'] ?? null,
                             'status' => $detail['status'],
                         ]);
                     $submittedIds[] = $detail['id'];
                 } else {
                     $new = $task->details()->create([
-                        'name'   => $detail['name'],
+                        'name'   => $name,
                         'desc'   => $detail['desc'] ?? null,
                         'status' => $detail['status'],
                     ]);

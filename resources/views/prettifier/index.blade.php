@@ -3,6 +3,64 @@
 @section('title', 'Code Prettifier - TaskManager')
 
 @section('content')
+<style>
+    /* Code Editor Container style */
+    .code-editor-container {
+        display: flex;
+        background: #f8fafc; /* light mode: bg-slate-50 equivalent */
+        border-radius: 12px;
+        border: 1px solid #e2e8f0; /* light mode: border-slate-200 equivalent */
+        overflow: hidden;
+        font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+        transition: all 0.2s ease-in-out;
+    }
+    .dark .code-editor-container {
+        background: #0d1117; /* dark mode: GitHub dark bg */
+        border: 1px solid #30363d;
+    }
+
+    /* Gutter style */
+    .code-editor-gutter {
+        min-width: 44px;
+        padding: 8px 8px 8px 0;
+        background: #f1f5f9; /* light mode: bg-slate-100 equivalent */
+        text-align: right;
+        color: #94a3b8; /* light mode: text-slate-400 */
+        font-size: 11px;
+        line-height: 1.7;
+        user-select: none;
+        overflow: hidden;
+        white-space: pre;
+        border-right: 1px solid #e2e8f0;
+        transition: all 0.2s ease-in-out;
+    }
+    .dark .code-editor-gutter {
+        background: #010409;
+        color: #484f58;
+        border-right: 1px solid #21262d;
+    }
+
+    /* Textarea style */
+    .code-editor-textarea {
+        flex: 1;
+        min-height: 280px;
+        background: transparent;
+        color: #0f172a; /* light mode: text-slate-900 */
+        padding: 8px;
+        font-size: 11px;
+        line-height: 1.7;
+        border: none;
+        outline: none;
+        resize: vertical;
+        tab-size: 4;
+        caret-color: #4f46e5; /* light mode: indigo-600 */
+        transition: all 0.2s ease-in-out;
+    }
+    .dark .code-editor-textarea {
+        color: #c9d1d9;
+        caret-color: #58a6ff;
+    }
+</style>
 <div class="space-y-6">
 
     {{-- Page Header --}}
@@ -72,7 +130,7 @@
         </div>
 
         {{-- Language label badge --}}
-        <div id="lang-info" class="flex items-center gap-2 text-[11px] font-semibold" style="color:#484f58;">
+        <div id="lang-info" class="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
             <span id="lang-dot" class="w-2 h-2 rounded-full inline-block" style="background:#f6c90e;"></span>
             <span id="lang-name-label">JavaScript (Prettier)</span>
             <span id="lib-loading" class="hidden text-amber-500">⏳ Loading formatter...</span>
@@ -93,17 +151,15 @@
                 <span class="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Input</span>
                 <span id="input-lines" class="text-[10px] text-slate-400 dark:text-zinc-600 font-semibold">0 baris</span>
             </div>
-            <div style="display:flex;background:#0d1117;border-radius:12px;border:1px solid #30363d;overflow:hidden;font-family:'Fira Code','Cascadia Code',Consolas,monospace;">
-                <div id="gutter-in"
-                     style="min-width:44px;padding:8px 8px 8px 0;background:#010409;text-align:right;color:#484f58;font-size:11px;line-height:1.7;user-select:none;overflow:hidden;white-space:pre;border-right:1px solid #21262d;">1
-</div>
+            <div class="code-editor-container">
+                <div id="gutter-in" class="code-editor-gutter">1</div>
                 <textarea id="code-in"
                           data-gid="gutter-in"
                           oninput="syncGutter(this,this.dataset.gid);updateLineCount()"
                           onscroll="syncGutterScroll(this,this.dataset.gid)"
                           onkeydown="handleCodeTab(event,this.dataset.gid)"
                           placeholder="// Paste your code here..."
-                          style="flex:1;min-height:280px;background:transparent;color:#c9d1d9;padding:8px;font-size:11px;line-height:1.7;border:none;outline:none;resize:vertical;tab-size:4;caret-color:#58a6ff;"></textarea>
+                          class="code-editor-textarea"></textarea>
             </div>
         </div>
 
@@ -130,14 +186,12 @@
                     Copy Output
                 </button>
             </div>
-            <div style="display:flex;background:#0d1117;border-radius:12px;border:1px solid #30363d;overflow:hidden;font-family:'Fira Code','Cascadia Code',Consolas,monospace;">
-                <div id="gutter-out"
-                     style="min-width:44px;padding:8px 8px 8px 0;background:#010409;text-align:right;color:#484f58;font-size:11px;line-height:1.7;user-select:none;overflow:hidden;white-space:pre;border-right:1px solid #21262d;">—
-</div>
+            <div class="code-editor-container">
+                <div id="gutter-out" class="code-editor-gutter">—</div>
                 <textarea id="code-out"
                           readonly
                           placeholder="// Formatted code will appear here..."
-                          style="flex:1;min-height:280px;background:transparent;color:#c9d1d9;padding:8px;font-size:11px;line-height:1.7;border:none;outline:none;resize:vertical;tab-size:4;"
+                          class="code-editor-textarea"
                           onscroll="syncGutterScroll(this,'gutter-out')"></textarea>
             </div>
         </div>

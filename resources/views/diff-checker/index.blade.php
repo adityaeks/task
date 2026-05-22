@@ -3,6 +3,64 @@
 @section('title', 'Diff Checker - TaskManager')
 
 @section('content')
+<style>
+    /* Code Editor Container style */
+    .code-editor-container {
+        display: flex;
+        background: #f8fafc; /* light mode: bg-slate-50 equivalent */
+        border-radius: 12px;
+        border: 1px solid #e2e8f0; /* light mode: border-slate-200 equivalent */
+        overflow: hidden;
+        font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+        transition: all 0.2s ease-in-out;
+    }
+    .dark .code-editor-container {
+        background: #0d1117; /* dark mode: GitHub dark bg */
+        border: 1px solid #30363d;
+    }
+
+    /* Gutter style */
+    .code-editor-gutter {
+        min-width: 44px;
+        padding: 8px 8px 8px 0;
+        background: #f1f5f9; /* light mode: bg-slate-100 equivalent */
+        text-align: right;
+        color: #94a3b8; /* light mode: text-slate-400 */
+        font-size: 11px;
+        line-height: 1.7;
+        user-select: none;
+        overflow: hidden;
+        white-space: pre;
+        border-right: 1px solid #e2e8f0;
+        transition: all 0.2s ease-in-out;
+    }
+    .dark .code-editor-gutter {
+        background: #010409;
+        color: #484f58;
+        border-right: 1px solid #21262d;
+    }
+
+    /* Textarea style */
+    .code-editor-textarea {
+        flex: 1;
+        min-height: 240px;
+        background: transparent;
+        color: #0f172a; /* light mode: text-slate-900 */
+        padding: 8px;
+        font-size: 11px;
+        line-height: 1.7;
+        border: none;
+        outline: none;
+        resize: vertical;
+        tab-size: 4;
+        caret-color: #4f46e5; /* light mode: indigo-600 */
+        transition: all 0.2s ease-in-out;
+    }
+    .dark .code-editor-textarea {
+        color: #c9d1d9;
+        caret-color: #58a6ff;
+    }
+</style>
 <div class="space-y-6">
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -26,16 +84,14 @@
                         Original Code (Before)
                     </span>
                 </label>
-                <div style="display:flex;background:#0d1117;border-radius:12px;border:1px solid #30363d;overflow:hidden;font-family:'Fira Code','Cascadia Code',Consolas,monospace;">
-                    <div id="gutter-before"
-                         style="min-width:44px;padding:8px 8px 8px 0;background:#010409;text-align:right;color:#484f58;font-size:11px;line-height:1.7;user-select:none;overflow:hidden;white-space:pre;border-right:1px solid #21262d;">1
-</div>
+                <div class="code-editor-container">
+                    <div id="gutter-before" class="code-editor-gutter">1</div>
                     <textarea id="code-before" data-gid="gutter-before"
                               oninput="syncGutter(this,this.dataset.gid)"
                               onscroll="syncGutterScroll(this,this.dataset.gid)"
                               onkeydown="handleCodeTab(event,this.dataset.gid)"
                               placeholder="// Paste original code here..."
-                              style="flex:1;min-height:240px;background:transparent;color:#c9d1d9;padding:8px;font-size:11px;line-height:1.7;border:none;outline:none;resize:vertical;tab-size:4;caret-color:#58a6ff;"></textarea>
+                              class="code-editor-textarea"></textarea>
                 </div>
             </div>
             <div>
@@ -45,16 +101,14 @@
                         Changed Code (After)
                     </span>
                 </label>
-                <div style="display:flex;background:#0d1117;border-radius:12px;border:1px solid #30363d;overflow:hidden;font-family:'Fira Code','Cascadia Code',Consolas,monospace;">
-                    <div id="gutter-after"
-                         style="min-width:44px;padding:8px 8px 8px 0;background:#010409;text-align:right;color:#484f58;font-size:11px;line-height:1.7;user-select:none;overflow:hidden;white-space:pre;border-right:1px solid #21262d;">1
-</div>
+                <div class="code-editor-container">
+                    <div id="gutter-after" class="code-editor-gutter">1</div>
                     <textarea id="code-after" data-gid="gutter-after"
                               oninput="syncGutter(this,this.dataset.gid)"
                               onscroll="syncGutterScroll(this,this.dataset.gid)"
                               onkeydown="handleCodeTab(event,this.dataset.gid)"
                               placeholder="// Paste changed code here..."
-                              style="flex:1;min-height:240px;background:transparent;color:#c9d1d9;padding:8px;font-size:11px;line-height:1.7;border:none;outline:none;resize:vertical;tab-size:4;caret-color:#58a6ff;"></textarea>
+                              class="code-editor-textarea"></textarea>
                 </div>
             </div>
         </div>
@@ -67,6 +121,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
                 Bandingkan Kode
+            </button>
+            <button onclick="swapCode()"
+                    class="px-4 py-2.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-bold text-sm rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Swap code
             </button>
             <div class="flex items-center gap-3">
                 <span class="text-sm font-semibold text-slate-600 dark:text-zinc-400">Tampilan:</span>
@@ -84,7 +145,7 @@
         </div>
 
         <!-- Diff Output -->
-        <div id="diff-output" style="display:none;border-radius:12px;overflow:hidden;border:1px solid #30363d;">
+        <div id="diff-output" class="border border-slate-200 dark:border-zinc-800/80 rounded-xl overflow-hidden" style="display:none;">
             <div id="diff-table-wrap" style="overflow-x:auto;"></div>
         </div>
     </div>
@@ -119,24 +180,37 @@ function handleCodeTab(e, gid) {
     syncGutter(ta, gid);
 }
 
-/* ═══════════════════════════════ Theme Constants ═══════════════════════════════ */
-const T = {
-    bg:           '#0d1117',
-    gutterBg:     '#010409',
-    gutterBorder: '#21262d',
-    gutterColor:  '#484f58',
-    text:         '#c9d1d9',
-    font:         "'Fira Code','Cascadia Code',Consolas,monospace",
-    fontSize:     '11px',
-    lineH:        '1.7',
-    addBg:        'rgba(46,160,67,0.15)',
-    addGutter:    'rgba(46,160,67,0.25)',
-    addPrefix:    '#3fb950',
-    delBg:        'rgba(248,81,73,0.15)',
-    delGutter:    'rgba(248,81,73,0.25)',
-    delPrefix:    '#f85149',
-    emptyBg:      '#010409',
-};
+/* ═══════════════════════════════ Theme Constants (Adaptive) ═══════════════════════════════ */
+let T;
+let G, C, P;
+
+function getTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return {
+        bg:           isDark ? '#0d1117' : '#f8fafc',
+        gutterBg:     isDark ? '#010409' : '#f1f5f9',
+        gutterBorder: isDark ? '#21262d' : '#e2e8f0',
+        gutterColor:  isDark ? '#484f58' : '#94a3b8',
+        text:         isDark ? '#c9d1d9' : '#0f172a',
+        font:         "'Fira Code','Cascadia Code',Consolas,monospace",
+        fontSize:     '11px',
+        lineH:        '1.7',
+        addBg:        isDark ? 'rgba(46,160,67,0.15)' : 'rgba(74,222,128,0.12)',
+        addGutter:    isDark ? 'rgba(46,160,67,0.25)' : 'rgba(74,222,128,0.20)',
+        addPrefix:    isDark ? '#3fb950' : '#16a34a',
+        delBg:        isDark ? 'rgba(248,81,73,0.15)' : 'rgba(248,113,113,0.12)',
+        delGutter:    isDark ? 'rgba(248,81,73,0.25)' : 'rgba(248,113,113,0.20)',
+        delPrefix:    isDark ? '#f85149' : '#dc2626',
+        emptyBg:      isDark ? '#010409' : '#f8fafc',
+    };
+}
+
+function updateTheme() {
+    T = getTheme();
+    G = `padding:0 10px;text-align:right;color:${T.gutterColor};border-right:1px solid ${T.gutterBorder};user-select:none;min-width:40px;vertical-align:top;white-space:nowrap;font-family:${T.font};font-size:${T.fontSize};line-height:${T.lineH};`;
+    C = (bg) => `padding:1px 12px;color:${T.text};background:${bg};white-space:pre-wrap;word-break:break-word;vertical-align:top;font-family:${T.font};font-size:${T.fontSize};line-height:${T.lineH};`;
+    P = (bg, color) => `padding:0 8px;color:${color};font-weight:700;background:${bg};user-select:none;vertical-align:top;font-family:${T.font};font-size:${T.fontSize};line-height:${T.lineH};`;
+}
 
 /* ═══════════════════════════════ Utilities ═══════════════════════════════ */
 function esc(s) {
@@ -153,9 +227,6 @@ function splitLines(value) {
 }
 
 /* ═══════════════════════════════ Row Builders ═══════════════════════════════ */
-const G = `padding:0 10px;text-align:right;color:${T.gutterColor};border-right:1px solid ${T.gutterBorder};user-select:none;min-width:40px;vertical-align:top;white-space:nowrap;font-family:${T.font};font-size:${T.fontSize};line-height:${T.lineH};`;
-const C = (bg) => `padding:1px 12px;color:${T.text};background:${bg};white-space:pre-wrap;word-break:break-word;vertical-align:top;font-family:${T.font};font-size:${T.fontSize};line-height:${T.lineH};`;
-const P = (bg, color) => `padding:0 8px;color:${color};font-weight:700;background:${bg};user-select:none;vertical-align:top;font-family:${T.font};font-size:${T.fontSize};line-height:${T.lineH};`;
 
 function unifiedRow(lnO, lnN, type, text) {
     const rowBg  = type === 'add' ? T.addBg   : type === 'del' ? T.delBg   : T.bg;
@@ -262,6 +333,7 @@ function buildSplit(diff) {
 
 /* ═══════════════════════════════ Main Compare ═══════════════════════════════ */
 function compareCode() {
+    updateTheme();
     const before   = document.getElementById('code-before').value;
     const after    = document.getElementById('code-after').value;
     const layout   = document.getElementById('diff-layout').value;
@@ -290,6 +362,24 @@ function compareCode() {
     stats.style.display = 'flex';
 
     output.style.display = 'block';
+}
+
+function swapCode() {
+    const before = document.getElementById('code-before');
+    const after = document.getElementById('code-after');
+    const temp = before.value;
+    before.value = after.value;
+    after.value = temp;
+
+    // Sync the line number gutters after swapping
+    syncGutter(before, before.dataset.gid);
+    syncGutter(after, after.dataset.gid);
+
+    // If diff output is already visible, re-run comparison
+    const output = document.getElementById('diff-output');
+    if (output.style.display !== 'none') {
+        compareCode();
+    }
 }
 </script>
 @endpush

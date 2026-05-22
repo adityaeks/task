@@ -132,6 +132,34 @@
     </div>
 </div>
 
+
+{{-- Custom Delete Note Confirmation Modal --}}
+<div id="delete-note-modal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 hidden">
+    <div id="delete-note-modal-card" class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-200">
+        <div class="p-6 text-center space-y-4">
+            <div class="h-12 w-12 bg-rose-50 dark:bg-rose-950/30 rounded-2xl flex items-center justify-center mx-auto text-rose-500">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <div class="space-y-1">
+                <h3 class="font-outfit font-extrabold text-base text-slate-800 dark:text-zinc-100">Hapus Catatan?</h3>
+                <p id="delete-note-modal-text" class="text-xs text-slate-400 dark:text-zinc-500 leading-relaxed px-2">Apakah Anda yakin ingin menghapus catatan ini? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="closeDeleteNoteModal()"
+                        class="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 font-bold text-xs rounded-xl transition">
+                    Batal
+                </button>
+                <button type="button" id="confirm-delete-note-btn"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-rose-600/10">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Edit Note Modal --}}
 <div id="edit-note-modal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 hidden">
     <div id="edit-modal-card" class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xl overflow-hidden transition-all duration-200">
@@ -697,8 +725,37 @@ async function changeColor(id, hex) {
 }
 
 // AJAX: Delete Note
-async function deleteNote(id) {
-    if (!confirm('Hapus catatan ini?')) return;
+let noteIdToDelete = null;
+
+function deleteNote(id) {
+    noteIdToDelete = id;
+    const modal = document.getElementById('delete-note-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    const card = document.getElementById('delete-note-modal-card');
+    requestAnimationFrame(() => {
+        card.classList.remove('scale-95', 'opacity-0');
+    });
+}
+
+function closeDeleteNoteModal() {
+    const modal = document.getElementById('delete-note-modal');
+    const card = document.getElementById('delete-note-modal-card');
+    card.classList.add('scale-95', 'opacity-0');
+    
+    card.addEventListener('transitionend', function handler() {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        noteIdToDelete = null;
+        card.removeEventListener('transitionend', handler);
+    }, { once: true });
+}
+
+document.getElementById('confirm-delete-note-btn').addEventListener('click', async () => {
+    if (!noteIdToDelete) return;
+    const id = noteIdToDelete;
+    closeDeleteNoteModal();
 
     try {
         const response = await fetch(`/notes/${id}`, {
@@ -746,7 +803,7 @@ async function deleteNote(id) {
     } catch (err) {
         console.error('Gagal menghapus:', err);
     }
-}
+});
 
 // ══════════════════════════════════════ EDIT MODAL ══════════════════════════════════════
 
