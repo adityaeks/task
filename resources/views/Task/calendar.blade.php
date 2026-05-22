@@ -66,6 +66,126 @@
     }
 
     $todayDateStr = date('Y-m-d');
+
+    // Global Holiday definitions
+    $fixedHolidays = [
+        '01-01' => 'Tahun Baru Masehi',
+        '05-01' => 'Hari Buruh Internasional',
+        '06-01' => 'Hari Lahir Pancasila',
+        '08-17' => 'Hari Kemerdekaan RI',
+        '12-25' => 'Hari Raya Natal',
+    ];
+    
+    $moveableHolidays2026 = [
+        '2026-05-14' => 'Kenaikan Yesus Kristus',
+        '2026-05-27' => 'Hari Raya Waisak',
+        '2026-06-16' => 'Hari Raya Idul Adha',
+        '2026-07-13' => 'Tahun Baru Islam',
+        '2026-08-25' => 'Maulid Nabi Muhammad SAW',
+    ];
+
+    // Pre-calculate all 12 months for the Yearly Grid view
+    $yearlyMonths = [];
+    for ($m = 1; $m <= 12; $m++) {
+        $firstDayOfMonth = \Carbon\Carbon::create($selectedYear, $m, 1);
+        $daysInM = $firstDayOfMonth->daysInMonth;
+        $startDayOfWeek = $firstDayOfMonth->dayOfWeek; // 0 = Sunday, 6 = Saturday
+        
+        $mCells = [];
+        // Add empty cells for padding
+        for ($i = 0; $i < $startDayOfWeek; $i++) {
+            $mCells[] = null;
+        }
+        
+        // Add calendar dates
+        for ($d = 1; $d <= $daysInM; $d++) {
+            $cDate = \Carbon\Carbon::create($selectedYear, $m, $d);
+            $dKey = $cDate->format('Y-m-d');
+            $mdKey = $cDate->format('m-d');
+            
+            $isSun = ($cDate->dayOfWeek === 0);
+            $isHoli = $isSun 
+                || isset($fixedHolidays[$mdKey]) 
+                || ($selectedYear === 2026 && isset($moveableHolidays2026[$dKey]));
+                
+            $holiName = '';
+            if (isset($fixedHolidays[$mdKey])) {
+                $holiName = $fixedHolidays[$mdKey];
+            } elseif ($selectedYear === 2026 && isset($moveableHolidays2026[$dKey])) {
+                $holiName = $moveableHolidays2026[$dKey];
+            } elseif ($isSun) {
+                $holiName = 'Hari Minggu';
+            }
+            
+            $isTod = ($dKey === $todayDateStr);
+            
+            $mCells[] = [
+                'day' => $d,
+                'date' => $cDate,
+                'isSunday' => $isSun,
+                'isHoliday' => $isHoli,
+                'holidayName' => $holiName,
+                'isToday' => $isTod
+            ];
+        }
+        
+        $yearlyMonths[$m] = [
+            'name' => $monthsList[$m],
+            'cells' => $mCells
+        ];
+    }
+
+    // Find holidays in the current selected month (excluding Sundays)
+    $monthlyHolidays = [];
+    foreach ($fixedHolidays as $md => $name) {
+        $parts = explode('-', $md);
+        if ((int)$parts[0] === $selectedMonth) {
+            $date = \Carbon\Carbon::create($selectedYear, (int)$parts[0], (int)$parts[1]);
+            $monthlyHolidays[] = [
+                'date' => $date,
+                'name' => $name
+            ];
+        }
+    }
+    if ($selectedYear === 2026) {
+        foreach ($moveableHolidays2026 as $dateStr => $name) {
+            $date = \Carbon\Carbon::parse($dateStr);
+            if ($date->month === $selectedMonth) {
+                $monthlyHolidays[] = [
+                    'date' => $date,
+                    'name' => $name
+                ];
+            }
+        }
+    }
+    // Sort monthly holidays by date
+    usort($monthlyHolidays, function($a, $b) {
+        return $a['date']->timestamp <=> $b['date']->timestamp;
+    });
+
+    // Find all holidays in the selected year (excluding Sundays)
+    $yearlyHolidaysList = [];
+    foreach ($fixedHolidays as $md => $name) {
+        $parts = explode('-', $md);
+        $date = \Carbon\Carbon::create($selectedYear, (int)$parts[0], (int)$parts[1]);
+        $yearlyHolidaysList[] = [
+            'date' => $date,
+            'name' => $name
+        ];
+    }
+    if ($selectedYear === 2026) {
+        foreach ($moveableHolidays2026 as $dateStr => $name) {
+            $date = \Carbon\Carbon::parse($dateStr);
+            $yearlyHolidaysList[] = [
+                'date' => $date,
+                'name' => $name
+            ];
+        }
+    }
+    // Sort yearly holidays by date
+    usort($yearlyHolidaysList, function($a, $b) {
+        return $a['date']->timestamp <=> $b['date']->timestamp;
+    });
 @endphp
 
 <style>
@@ -251,8 +371,22 @@
 
         {{-- Interactive Filters --}}
         <div class="flex flex-wrap items-center gap-3">
-            {{-- Prev/Next Month Steppers --}}
+            {{-- View Switcher Toggle Group --}}
             <div class="flex items-center bg-slate-100 dark:bg-zinc-800/60 p-1 rounded-xl">
+                <button onclick="switchView('monthly')" id="btn-view-monthly" 
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 bg-white text-indigo-600 dark:bg-zinc-700 dark:text-white shadow-sm"
+                        title="Tampilan Bulanan Detail">
+                    Bulanan
+                </button>
+                <button onclick="switchView('yearly')" id="btn-view-yearly" 
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 text-slate-600 hover:bg-slate-200/50 dark:text-zinc-400 dark:hover:bg-zinc-700/50"
+                        title="Tampilan Setahun Penuh">
+                    Full
+                </button>
+            </div>
+
+            {{-- Prev/Next Month Steppers (Visible in Monthly View only) --}}
+            <div id="monthly-navigation-steppers" class="flex items-center bg-slate-100 dark:bg-zinc-800/60 p-1 rounded-xl">
                 <a href="{{ route('tasks.calendar', ['month' => $prevMonth->month, 'year' => $prevMonth->year]) }}" 
                    class="p-1.5 rounded-lg text-slate-600 hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition" 
                    title="Bulan Sebelumnya">
@@ -273,147 +407,346 @@
                     </svg>
                 </a>
             </div>
+
+            {{-- Prev/Next Year Steppers (Visible in Yearly View only) --}}
+            <div id="yearly-navigation-steppers" class="hidden flex items-center bg-slate-100 dark:bg-zinc-800/60 p-1 rounded-xl">
+                <a href="{{ route('tasks.calendar', ['month' => $selectedMonth, 'year' => $selectedYear - 1]) }}" 
+                   class="p-1.5 rounded-lg text-slate-600 hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition" 
+                   title="Tahun Sebelumnya">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                
+                <span class="text-xs font-bold px-3 text-slate-700 dark:text-zinc-300 select-none min-w-[120px] text-center">
+                    Tahun {{ $selectedYear }}
+                </span>
+
+                <a href="{{ route('tasks.calendar', ['month' => $selectedMonth, 'year' => $selectedYear + 1]) }}" 
+                   class="p-1.5 rounded-lg text-slate-600 hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition" 
+                   title="Tahun Berikutnya">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
         </div>
     </div>
 
-    {{-- Calendar Main Table --}}
-    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm overflow-hidden">
-        
-        {{-- Weekday Headers --}}
-        <div class="grid grid-cols-7 calendar-grid-7 border-b border-slate-100 dark:border-zinc-800/60 bg-slate-50/60 dark:bg-zinc-900/50">
-            @php
-                $weekDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            @endphp
-            @foreach($weekDays as $index => $day)
-                <div class="px-2 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider {{ $index === 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-zinc-500' }}">
-                    {{ $day }}
-                </div>
-            @endforeach
-        </div>
-
-        {{-- Monthly Grid Cells --}}
-        <div class="grid grid-cols-7 calendar-grid-7 bg-slate-100 dark:bg-zinc-850">
-            @foreach($cells as $cell)
+    {{-- Calendar Main Table (Monthly View Wrapper) --}}
+    <div id="calendar-monthly-view" class="transition-all duration-300">
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm overflow-hidden">
+            
+            {{-- Weekday Headers --}}
+            <div class="grid grid-cols-7 calendar-grid-7 border-b border-slate-100 dark:border-zinc-800/60 bg-slate-50/60 dark:bg-zinc-900/50">
                 @php
-                    $cellDate = $cell['date'];
-                    $dateKey = $cellDate->format('Y-m-d');
-                    $isCurrentMonth = $cell['isCurrentMonth'];
-                    $dayTasks = $tasks->get($dateKey) ?? collect();
-                    $isToday = ($dateKey === $todayDateStr);
-                    $taskCount = $dayTasks->count();
-
-                    // Holiday check logic (Every Sunday + fixed/moveable Indonesian national holidays)
-                    $isSunday = $cellDate->isSunday();
-                    
-                    // Fixed annual national holidays
-                    $fixedHolidays = [
-                        '01-01' => 'Tahun Baru Masehi',
-                        '05-01' => 'Hari Buruh Internasional',
-                        '06-01' => 'Hari Lahir Pancasila',
-                        '08-17' => 'Hari Kemerdekaan RI',
-                        '12-25' => 'Hari Raya Natal',
-                    ];
-                    
-                    // Year-specific moveable holidays for 2026 (matching your calendar image exactly)
-                    $moveableHolidays2026 = [
-                        '2026-05-14' => 'Kenaikan Yesus Kristus',
-                        '2026-05-27' => 'Hari Raya Waisak',
-                        '2026-06-16' => 'Hari Raya Idul Adha',
-                        '2026-07-13' => 'Tahun Baru Islam',
-                        '2026-08-25' => 'Maulid Nabi Muhammad SAW',
-                    ];
-                    
-                    $mdKey = $cellDate->format('m-d');
-                    $isHoliday = $isSunday 
-                        || isset($fixedHolidays[$mdKey]) 
-                        || ($cellDate->year === 2026 && isset($moveableHolidays2026[$dateKey]));
-                        
-                    $holidayName = '';
-                    if (isset($fixedHolidays[$mdKey])) {
-                        $holidayName = $fixedHolidays[$mdKey];
-                    } elseif ($cellDate->year === 2026 && isset($moveableHolidays2026[$dateKey])) {
-                        $holidayName = $moveableHolidays2026[$dateKey];
-                    } elseif ($isSunday) {
-                        $holidayName = 'Hari Minggu';
-                    }
+                    $weekDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                 @endphp
-
-                <div class="relative min-h-[95px] p-1.5 flex flex-col justify-between group calendar-cell transition duration-150 {{ $isCurrentMonth ? 'cell-current text-slate-700 dark:text-zinc-300' : 'cell-outside text-slate-400 dark:text-zinc-500' }}">
-                    
-                    {{-- Cell Header: Day Number and Action Buttons --}}
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[11px] font-bold rounded-full flex items-center justify-center h-5 w-5
-                            @if($isToday)
-                                bg-indigo-600 dark:bg-indigo-500 text-white font-extrabold
-                            @elseif($isHoliday)
-                                {{ $isCurrentMonth ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-rose-300/60 dark:text-rose-900/40 font-semibold' }}
-                            @else
-                                {{ $isCurrentMonth ? 'text-slate-700 dark:text-zinc-300' : 'text-slate-400/80 dark:text-zinc-600' }}
-                            @endif"
-                            @if($isHoliday && $holidayName) title="{{ $holidayName }}" @endif>
-                            {{ $cell['day'] }}
-                        </span>
-
-                        {{-- Quick Add Task button (shows on hover) --}}
-                        <a href="{{ route('tasks.create', ['date' => $dateKey]) }}"
-                           class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400"
-                           title="Tambah Task untuk tanggal ini">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                        </a>
+                @foreach($weekDays as $index => $day)
+                    <div class="px-2 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider {{ $index === 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-zinc-500' }}">
+                        {{ $day }}
                     </div>
+                @endforeach
+            </div>
 
-                    {{-- Cell Content: Tasks Container --}}
-                    <div class="flex-1 flex flex-col justify-end space-y-1">
-                        {{-- Desktop Layout: Full Text Badges --}}
-                        <div class="calendar-desktop-only flex-col gap-1 overflow-y-auto calendar-tasks-container pr-0.5 compact-scrollbar">
-                             @foreach($dayTasks as $task)
-                                @php
-                                    $allDone = ($task->details_count > 0 && $task->completed_count === $task->details_count);
-                                    $badgeStyle = $allDone ? 'badge-completed' : 'badge-pending';
-                                @endphp
-                                <a href="{{ route('tasks.show', $task->id) }}" 
-                                   class="task-badge {{ $badgeStyle }}"
-                                   title="{{ $task->title }} ({{ $task->completed_count }}/{{ $task->details_count }} subtask)">
-                                    <span class="truncate flex-1">{{ $task->title }}</span>
-                                    
-                                    {{-- Sub-task Progress Counter --}}
-                                    @if($task->details_count > 0)
-                                        <span class="task-badge-progress">
-                                            {{ $task->completed_count }}/{{ $task->details_count }}
-                                        </span>
-                                    @endif
+            {{-- Monthly Grid Cells --}}
+            <div class="grid grid-cols-7 calendar-grid-7 bg-slate-100 dark:bg-zinc-850">
+                @foreach($cells as $cell)
+                    @php
+                        $cellDate = $cell['date'];
+                        $dateKey = $cellDate->format('Y-m-d');
+                        $isCurrentMonth = $cell['isCurrentMonth'];
+                        $dayTasks = $tasks->get($dateKey) ?? collect();
+                        $isToday = ($dateKey === $todayDateStr);
+                        $taskCount = $dayTasks->count();
 
-                                    {{-- Assigned User indicator --}}
-                                    @if($task->user)
-                                        <span class="task-badge-user">
-                                            {{ substr($task->user, 0, 2) }}
-                                        </span>
-                                    @endif
-                                </a>
-                            @endforeach
+                        // Holiday check logic (Every Sunday + fixed/moveable Indonesian national holidays)
+                        $isSunday = $cellDate->isSunday();
+                        $mdKey = $cellDate->format('m-d');
+                        $isHoliday = $isSunday 
+                            || isset($fixedHolidays[$mdKey]) 
+                            || ($cellDate->year === 2026 && isset($moveableHolidays2026[$dateKey]));
+                            
+                        $holidayName = '';
+                        if (isset($fixedHolidays[$mdKey])) {
+                            $holidayName = $fixedHolidays[$mdKey];
+                        } elseif ($cellDate->year === 2026 && isset($moveableHolidays2026[$dateKey])) {
+                            $holidayName = $moveableHolidays2026[$dateKey];
+                        } elseif ($isSunday) {
+                            $holidayName = 'Hari Minggu';
+                        }
+                    @endphp
+
+                    <div class="relative min-h-[95px] p-1.5 flex flex-col justify-between group calendar-cell transition duration-150 {{ $isCurrentMonth ? 'cell-current text-slate-700 dark:text-zinc-300' : 'cell-outside text-slate-400 dark:text-zinc-500' }}">
+                        
+                        {{-- Cell Header: Day Number and Action Buttons --}}
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[11px] font-bold rounded-full flex items-center justify-center h-5 w-5
+                                @if($isToday)
+                                    bg-indigo-600 dark:bg-indigo-500 text-white font-extrabold
+                                @elseif($isHoliday)
+                                    {{ $isCurrentMonth ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-rose-300/60 dark:text-rose-900/40 font-semibold' }}
+                                @else
+                                    {{ $isCurrentMonth ? 'text-slate-700 dark:text-zinc-300' : 'text-slate-400/80 dark:text-zinc-600' }}
+                                @endif"
+                                @if($isHoliday && $holidayName) title="{{ $holidayName }}" @endif>
+                                {{ $cell['day'] }}
+                            </span>
+
+                            {{-- Quick Add Task button (shows on hover) --}}
+                            <a href="{{ route('tasks.create', ['date' => $dateKey]) }}"
+                               class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400"
+                               title="Tambah Task untuk tanggal ini">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </a>
                         </div>
 
-                        {{-- Mobile Layout: Dot Indicators for task count --}}
-                        @if($taskCount > 0)
-                            <div class="calendar-mobile-only flex-wrap gap-0.5 justify-center mt-0.5">
-                                @foreach($dayTasks as $task)
+                        {{-- Cell Content: Tasks Container --}}
+                        <div class="flex-1 flex flex-col justify-end space-y-1">
+                            {{-- Desktop Layout: Full Text Badges --}}
+                            <div class="calendar-desktop-only flex-col gap-1 overflow-y-auto calendar-tasks-container pr-0.5 compact-scrollbar">
+                                 @foreach($dayTasks as $task)
                                     @php
                                         $allDone = ($task->details_count > 0 && $task->completed_count === $task->details_count);
-                                        $dotColor = $allDone ? 'bg-emerald-500' : 'bg-indigo-500';
+                                        $badgeStyle = $allDone ? 'badge-completed' : 'badge-pending';
                                     @endphp
-                                    <span class="h-1.5 w-1.5 rounded-full {{ $dotColor }}" title="{{ $task->title }}"></span>
+                                    <a href="{{ route('tasks.show', $task->id) }}" 
+                                       class="task-badge {{ $badgeStyle }}"
+                                       title="{{ $task->title }} ({{ $task->completed_count }}/{{ $task->details_count }} subtask)">
+                                        <span class="truncate flex-1">{{ $task->title }}</span>
+                                        
+                                        {{-- Sub-task Progress Counter --}}
+                                        @if($task->details_count > 0)
+                                            <span class="task-badge-progress">
+                                                {{ $task->completed_count }}/{{ $task->details_count }}
+                                            </span>
+                                        @endif
+
+                                        {{-- Assigned User indicator --}}
+                                        @if($task->user)
+                                            <span class="task-badge-user">
+                                                {{ substr($task->user, 0, 2) }}
+                                            </span>
+                                        @endif
+                                    </a>
                                 @endforeach
                             </div>
-                        @endif
-                    </div>
 
+                            {{-- Mobile Layout: Dot Indicators for task count --}}
+                            @if($taskCount > 0)
+                                <div class="calendar-mobile-only flex-wrap gap-0.5 justify-center mt-0.5">
+                                    @foreach($dayTasks as $task)
+                                        @php
+                                            $allDone = ($task->details_count > 0 && $task->completed_count === $task->details_count);
+                                            $dotColor = $allDone ? 'bg-emerald-500' : 'bg-indigo-500';
+                                        @endphp
+                                        <span class="h-1.5 w-1.5 rounded-full {{ $dotColor }}" title="{{ $task->title }}"></span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                    </div>
+                @endforeach
+            </div>
+
+        </div>
+    </div>
+
+    {{-- Calendar Yearly View (Full Year Layout) --}}
+    <div id="calendar-yearly-view" class="hidden transition-all duration-300">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach($yearlyMonths as $mNum => $yMonth)
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm p-4 flex flex-col justify-between">
+                    {{-- Month Name Header (links to that month's detail) --}}
+                    <div class="mb-3 text-center border-b border-slate-100 dark:border-zinc-800/40 pb-2">
+                        <a href="{{ route('tasks.calendar', ['month' => $mNum, 'year' => $selectedYear]) }}" 
+                           class="font-outfit font-extrabold text-sm text-slate-800 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                           title="Lihat detail bulan {{ $yMonth['name'] }}">
+                            {{ $yMonth['name'] }}
+                        </a>
+                    </div>
+                    
+                    {{-- Mini-calendar weekday headers --}}
+                    <div class="grid grid-cols-7 gap-y-1 text-center mb-1.5">
+                        @php
+                            $miniDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+                        @endphp
+                        @foreach($miniDays as $idx => $mDay)
+                            <span class="text-[9px] font-extrabold tracking-wider {{ $idx === 0 ? 'text-rose-600 dark:text-rose-450 font-black' : 'text-slate-400 dark:text-zinc-500' }}">
+                                {{ $mDay }}
+                            </span>
+                        @endforeach
+                    </div>
+                    
+                    {{-- Mini-calendar cells grid --}}
+                    <div class="grid grid-cols-7 gap-y-1 text-center">
+                        @foreach($yMonth['cells'] as $cell)
+                            @if(is_null($cell))
+                                <span class="text-[10px] py-0.5 text-transparent select-none"></span>
+                            @else
+                                @php
+                                    $cellDate = $cell['date'];
+                                    $dateStr = $cellDate->format('Y-m-d');
+                                    $dayTasks = $tasks->get($dateStr) ?? collect();
+                                    $taskCount = $dayTasks->count();
+                                @endphp
+                                <a href="{{ route('tasks.calendar', ['month' => $mNum, 'year' => $selectedYear]) }}"
+                                   class="relative group py-0.5 text-[10px] font-bold rounded-full flex flex-col items-center justify-center h-5 w-5 mx-auto transition-all duration-100
+                                       @if($cell['isToday'])
+                                           border-2 border-slate-900 dark:border-white font-black text-slate-900 dark:text-white scale-110 shadow-sm
+                                       @elseif($cell['isHoliday'])
+                                           text-rose-600 dark:text-rose-400 font-extrabold
+                                       @else
+                                           text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800
+                                       @endif"
+                                   title="{{ $cellDate->translatedFormat('d F Y') }}{{ $cell['holidayName'] ? ' - ' . $cell['holidayName'] : '' }}{{ $taskCount > 0 ? ' (' . $taskCount . ' task)' : '' }}">
+                                   <span>{{ $cell['day'] }}</span>
+                                   
+                                   {{-- Ultra-minimal subtle task dot under the date cell if it contains tasks --}}
+                                   @if($taskCount > 0)
+                                       <span class="absolute bottom-[2px] h-[3.5px] w-[3.5px] rounded-full 
+                                           @if($cell['isToday']) bg-slate-900 dark:bg-white @elseif($cell['isHoliday']) bg-rose-500 @else bg-indigo-500 @endif"></span>
+                                   @endif
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
             @endforeach
         </div>
+    </div>
 
+    {{-- Holiday Information Card (Monthly View) --}}
+    <div id="monthly-holidays-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm p-4 lg:p-5 mt-4 transition-all duration-300">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-450">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </span>
+            <h2 class="font-outfit font-extrabold text-sm tracking-tight text-slate-800 dark:text-zinc-200">Informasi Hari Libur Nasional - {{ $monthsList[$selectedMonth] }} {{ $selectedYear }}</h2>
+        </div>
+        
+        @if(count($monthlyHolidays) > 0)
+            <ul class="space-y-2 mt-1 pl-1">
+                @foreach($monthlyHolidays as $holi)
+                    <li class="flex items-center gap-2.5 text-[11px] leading-relaxed">
+                        <span class="inline-block w-1 h-1 rounded-full bg-rose-500 flex-shrink-0"></span>
+                        <div class="text-slate-500 dark:text-zinc-450">
+                            <span class="font-semibold text-slate-700 dark:text-zinc-300">
+                                {{ $holi['date']->translatedFormat('d F Y') }} ({{ $holi['date']->translatedFormat('l') }})
+                            </span>
+                            <span class="mx-1.5 text-slate-400 dark:text-zinc-600">-</span>
+                            <span class="font-medium text-rose-550 dark:text-rose-400/90">{{ $holi['name'] }}</span>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="text-[11px] text-slate-400 dark:text-zinc-500 font-semibold pl-1">Tidak ada hari libur nasional di bulan ini.</p>
+        @endif
+    </div>
+
+    {{-- Holiday Information Card (Yearly View) --}}
+    <div id="yearly-holidays-card" class="hidden bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/60 dark:border-zinc-800/60 shadow-sm p-4 lg:p-5 mt-4 transition-all duration-300">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-450">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </span>
+            <h2 class="font-outfit font-extrabold text-sm tracking-tight text-slate-800 dark:text-zinc-200">Daftar Hari Libur Nasional Tahun {{ $selectedYear }}</h2>
+        </div>
+        
+        <ul class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 mt-1 pl-1">
+            @foreach($yearlyHolidaysList as $holi)
+                <li class="flex items-center gap-2.5 text-[11px] leading-relaxed">
+                    <span class="inline-block w-1 h-1 rounded-full bg-rose-500 flex-shrink-0"></span>
+                    <div class="text-slate-500 dark:text-zinc-450">
+                        <span class="font-semibold text-slate-700 dark:text-zinc-300">
+                            {{ $holi['date']->translatedFormat('d F Y') }} ({{ $holi['date']->translatedFormat('l') }})
+                        </span>
+                        <span class="mx-1.5 text-slate-400 dark:text-zinc-600">-</span>
+                        <span class="font-medium text-rose-550 dark:text-rose-400/90">{{ $holi['name'] }}</span>
+                    </div>
+                </li>
+            @endforeach
+        </ul>
     </div>
 
 </div>
+
+<script>
+    // Premium Javascript View Switcher (Bulanan / Full Year)
+    function switchView(view) {
+        const monthlyView = document.getElementById('calendar-monthly-view');
+        const yearlyView = document.getElementById('calendar-yearly-view');
+        
+        const monthlySteppers = document.getElementById('monthly-navigation-steppers');
+        const yearlySteppers = document.getElementById('yearly-navigation-steppers');
+
+        const monthlyHolidays = document.getElementById('monthly-holidays-card');
+        const yearlyHolidays = document.getElementById('yearly-holidays-card');
+        
+        const btnMonthly = document.getElementById('btn-view-monthly');
+        const btnYearly = document.getElementById('btn-view-yearly');
+
+        const activeClasses = ['bg-white', 'text-indigo-600', 'dark:bg-zinc-700', 'dark:text-white', 'shadow-sm'];
+        const inactiveClasses = ['text-slate-600', 'hover:bg-slate-200/50', 'dark:text-zinc-400', 'dark:hover:bg-zinc-700/50'];
+
+        if (view === 'yearly') {
+            // Hide Monthly and Show Yearly grid
+            if (monthlyView) monthlyView.classList.add('hidden');
+            if (yearlyView) yearlyView.classList.remove('hidden');
+
+            // Switch steppers & holiday cards
+            if (monthlySteppers) monthlySteppers.classList.add('hidden');
+            if (yearlySteppers) yearlySteppers.classList.remove('hidden');
+            if (monthlyHolidays) monthlyHolidays.classList.add('hidden');
+            if (yearlyHolidays) yearlyHolidays.classList.remove('hidden');
+
+            // Set buttons active state
+            if (btnYearly) {
+                activeClasses.forEach(cls => btnYearly.classList.add(cls));
+                inactiveClasses.forEach(cls => btnYearly.classList.remove(cls));
+            }
+            if (btnMonthly) {
+                activeClasses.forEach(cls => btnMonthly.classList.remove(cls));
+                inactiveClasses.forEach(cls => btnMonthly.classList.add(cls));
+            }
+
+            localStorage.setItem('task_calendar_view', 'yearly');
+        } else {
+            // Show Monthly and Hide Yearly grid
+            if (monthlyView) monthlyView.classList.remove('hidden');
+            if (yearlyView) yearlyView.classList.add('hidden');
+
+            // Switch steppers & holiday cards
+            if (monthlySteppers) monthlySteppers.classList.remove('hidden');
+            if (yearlySteppers) yearlySteppers.classList.add('hidden');
+            if (monthlyHolidays) monthlyHolidays.classList.remove('hidden');
+            if (yearlyHolidays) yearlyHolidays.classList.add('hidden');
+
+            // Set buttons active state
+            if (btnMonthly) {
+                activeClasses.forEach(cls => btnMonthly.classList.add(cls));
+                inactiveClasses.forEach(cls => btnMonthly.classList.remove(cls));
+            }
+            if (btnYearly) {
+                activeClasses.forEach(cls => btnYearly.classList.remove(cls));
+                inactiveClasses.forEach(cls => btnYearly.classList.add(cls));
+            }
+
+            localStorage.setItem('task_calendar_view', 'monthly');
+        }
+    }
+
+    // Persist and load view choice on page load - Always default to monthly on new visit/refresh
+    document.addEventListener('DOMContentLoaded', function() {
+        switchView('monthly');
+    });
+</script>
 @endsection

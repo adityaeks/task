@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Dashboard | TaskManager')
+@section('title', 'TaskManager')
 
 @section('content')
     <!-- TAB 1: OVERVIEW PANEL -->
