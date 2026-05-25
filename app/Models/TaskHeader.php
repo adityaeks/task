@@ -13,6 +13,7 @@ class TaskHeader extends Model
         'date',
         'note',
         'user',
+        'category',
     ];
 
     protected $casts = [

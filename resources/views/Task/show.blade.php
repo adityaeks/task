@@ -118,6 +118,16 @@
                         {{ $task->user }}
                     </span>
                     @endif
+                    {{-- Category --}}
+                    @if($task->category)
+                    <span class="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-[11px]
+                        {{ $task->category === 'Live'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-violet-500/20 text-violet-300 border border-violet-500/30' }}">
+                        <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ $task->category === 'Live' ? 'bg-emerald-400' : 'bg-violet-400' }}"></span>
+                        {{ $task->category }}
+                    </span>
+                    @endif
                     {{-- Sub-tasks count --}}
                     <span class="flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

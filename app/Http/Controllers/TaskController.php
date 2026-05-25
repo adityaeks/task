@@ -31,6 +31,10 @@ class TaskController extends Controller
             $query->where('user', $request->user);
         }
 
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
         $tasks = $query->paginate(10)->withQueryString();
 
         // Distinct users for filter dropdown
@@ -97,6 +101,7 @@ class TaskController extends Controller
             'path'             => 'nullable|string|max:500',
             'note'             => 'nullable|string',
             'user'             => 'required|string|max:255',
+            'category'         => 'required|in:Development,Live',
             'details'          => 'nullable|array',
             'details.*.name'   => 'nullable|string|max:255',
             'details.*.desc'   => 'nullable|string',
@@ -105,11 +110,12 @@ class TaskController extends Controller
 
         DB::transaction(function () use ($request) {
             $header = TaskHeader::create([
-                'title' => $request->title,
-                'path'  => $request->path,
-                'date'  => $request->date,
-                'note'  => $request->note,
-                'user'  => $request->user,
+                'title'    => $request->title,
+                'path'     => $request->path,
+                'date'     => $request->date,
+                'note'     => $request->note,
+                'user'     => $request->user,
+                'category' => $request->category,
             ]);
 
             if ($request->filled('details')) {
@@ -162,6 +168,7 @@ class TaskController extends Controller
             'path'             => 'nullable|string|max:500',
             'note'             => 'nullable|string',
             'user'             => 'required|string|max:255',
+            'category'         => 'required|in:Development,Live',
             'details'          => 'nullable|array',
             'details.*.id'     => 'nullable|integer|exists:task_details,id',
             'details.*.name'   => 'nullable|string|max:255',
@@ -171,11 +178,12 @@ class TaskController extends Controller
 
         DB::transaction(function () use ($request, $task) {
             $task->update([
-                'title' => $request->title,
-                'path'  => $request->path,
-                'date'  => $request->date,
-                'note'  => $request->note,
-                'user'  => $request->user,
+                'title'    => $request->title,
+                'path'     => $request->path,
+                'date'     => $request->date,
+                'note'     => $request->note,
+                'user'     => $request->user,
+                'category' => $request->category,
             ]);
 
             // Sync details

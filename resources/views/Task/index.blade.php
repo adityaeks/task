@@ -51,12 +51,18 @@
             @endforeach
         </select>
         @endif
+        <select name="category"
+                class="px-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800 border-0 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+            <option value="">Semua Category</option>
+            <option value="Development" @selected(request('category') === 'Development')>Development</option>
+            <option value="Live" @selected(request('category') === 'Live')>Live</option>
+        </select>
         <div class="flex gap-2">
             <button type="submit"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition">
                 Filter
             </button>
-            @if(request()->hasAny(['search', 'user']))
+            @if(request()->hasAny(['search', 'user', 'category']))
             <a href="{{ route('tasks.index') }}"
                class="px-4 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 font-bold text-xs rounded-xl transition">
                 Reset
@@ -89,6 +95,7 @@
                     <th class="px-6 py-4">Judul Task</th>
                     <th class="px-6 py-4 hidden md:table-cell">Tanggal</th>
                     <th class="px-6 py-4 hidden md:table-cell">User</th>
+                    <th class="px-6 py-4 hidden sm:table-cell">Category</th>
                     <th class="px-6 py-4 hidden lg:table-cell">Complated File</th>
                     <th class="px-6 py-4 hidden lg:table-cell">Path / Link</th>
                     <th class="px-6 py-4 text-right">Aksi</th>
@@ -118,6 +125,19 @@
                         </span>
                         @else
                         <span class="text-[11px] text-slate-400 dark:text-zinc-600">—</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 hidden sm:table-cell">
+                        @if($task->category === 'Live')
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                            Live
+                        </span>
+                        @else
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0"></span>
+                            Development
+                        </span>
                         @endif
                     </td>
                     <td class="px-6 py-4 hidden lg:table-cell">
